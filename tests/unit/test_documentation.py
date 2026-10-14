@@ -25,13 +25,21 @@ WORKFLOW = PROJECT_ROOT / ".github" / "workflows" / "ci.yml"
 
 DOCUMENTED_FILES = [
     README,
-    AGENTS,
     STRUCTURE,
     DOCS / "SPEC.md",
     DOCS / "ARCHITECTURE.md",
     DOCS / "PROFILES.md",
+]
+
+# Документы для работы над проектом вместе с ИИ-агентом. Они остаются
+# у разработчика, но в публичный репозиторий не попадают, поэтому
+# проверяем их только тогда, когда они есть в этой копии проекта.
+LOCAL_ONLY_FILES = [
+    AGENTS,
     DOCS / "ACCEPTANCE.md",
 ]
+
+DOCUMENTED_FILES = DOCUMENTED_FILES + [path for path in LOCAL_ONLY_FILES if path.is_file()]
 LINK_PATTERN = re.compile(r"\]\(([^)#\s]+)\)")
 
 
@@ -136,12 +144,30 @@ def test_architecture_document_explains_key_decisions() -> None:
 
 
 def test_agents_rules_are_project_specific() -> None:
+    if not AGENTS.is_file():
+        pytest.skip("AGENTS.md не публикуется в репозитории")
     text = AGENTS.read_text(encoding="utf-8")
 
     assert "Содержание важнее оформления" in text
     assert "python -m pytest" in text
     assert "run_windows.bat" in text
     assert "update-index --chmod=+x" in text
+
+
+def test_agent_documents_are_not_published() -> None:
+    """Документы для работы ИИ-агента остаются у разработчика.
+
+    Публичный репозиторий содержит приложение и документацию к нему,
+    а служебные документы агента — нет.
+    """
+    ignored = (PROJECT_ROOT / ".gitignore").read_text(encoding="utf-8")
+
+    for name in ("AGENTS.md", "docs/ACCEPTANCE.md"):
+        assert name in ignored, f"{name} должен быть исключён из репозитория"
+
+    # Документы, которые публикуются, наоборот не должны быть исключены.
+    for name in ("README.md", "docs/SPEC.md", "docs/ARCHITECTURE.md", "docs/PROFILES.md"):
+        assert name not in ignored, f"{name} должен публиковаться"
 
 
 def test_project_structure_matches_reality() -> None:

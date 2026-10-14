@@ -94,10 +94,11 @@
 
 ## Запуск в Windows
 
-1. Скачайте проект: кнопка **Code → Download ZIP** на странице репозитория.
-2. Распакуйте архив **целиком** в удобную папку. Важно распаковать, а не
+1. Откройте страницу проекта: **https://github.com/MidshipFire5/word-formatter**
+2. Скачайте проект: кнопка **Code → Download ZIP**.
+3. Распакуйте архив **целиком** в удобную папку. Важно распаковать, а не
    открывать из архива: приложение создаёт рядом с собой окружение `.venv`.
-3. Двойной щелчок по `run_windows.bat`.
+4. Двойной щелчок по `run_windows.bat`.
 
 При первом запуске скрипт:
 
@@ -120,7 +121,7 @@
 ## Запуск в Linux
 
 ```bash
-git clone <адрес репозитория>
+git clone https://github.com/MidshipFire5/word-formatter.git
 cd word-formatter
 bash run_linux.sh
 ```
@@ -270,10 +271,7 @@ python -m venv .venv
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — устройство приложения,
   принятые решения и их причины;
 - [docs/PROFILES.md](docs/PROFILES.md) — формат профиля оформления;
-- [docs/ACCEPTANCE.md](docs/ACCEPTANCE.md) — отчёт о приёмке: что проверено
-  и чем подтверждено;
-- [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md) — назначение папок и файлов;
-- [AGENTS.md](AGENTS.md) — правила работы над проектом для ИИ-агентов.
+- [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md) — назначение папок и файлов.
 
 Пример документа для проверки лежит в папке `examples`:
 
