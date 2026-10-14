@@ -250,3 +250,28 @@ def test_workflow_checks_first_run_on_linux() -> None:
 def test_workflow_does_not_use_tabs_for_indentation() -> None:
     """YAML не допускает табуляцию для отступов."""
     assert "\t" not in WORKFLOW.read_text(encoding="utf-8")
+
+
+def test_workflow_checks_that_tests_leave_no_files() -> None:
+    """Тесты не должны оставлять файлов в репозитории.
+
+    Однажды временные файлы pytest попали в коммит: проверка в CI ловит это
+    до того, как мусор уедет в репозиторий.
+    """
+    text = WORKFLOW.read_text(encoding="utf-8")
+
+    assert "git status --porcelain" in text
+
+
+def test_pytest_config_does_not_point_to_missing_directory() -> None:
+    """Папка для временных файлов не должна задаваться: в клоне её нет."""
+    config = (PROJECT_ROOT / "pytest.ini").read_text(encoding="utf-8")
+
+    assert "--basetemp" not in config
+
+
+def test_test_artifacts_are_ignored() -> None:
+    ignored = (PROJECT_ROOT / ".gitignore").read_text(encoding="utf-8")
+
+    for pattern in ("pytest-of-*/", "tmp*.json"):
+        assert pattern in ignored, f"артефакты тестов не исключены: {pattern}"

@@ -52,6 +52,16 @@ jobs:
       - name: Тесты
         run: python -m pytest
 
+      - name: Проверка, что тесты не оставили файлов в проекте
+        run: |
+          # Если тесты создают файлы в репозитории, они попадут в следующий коммит.
+          # Такое уже случалось: pytest складывал временные файлы в корень проекта.
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "После тестов в проекте появились файлы или изменения:"
+            git status --porcelain
+            exit 1
+          fi
+
   first-run:
     name: Первый запуск через скрипт (Ubuntu)
     runs-on: ubuntu-latest
