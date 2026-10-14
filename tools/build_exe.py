@@ -1,19 +1,24 @@
 """Сборка переносимой версии приложения (PyInstaller).
 
-Собирается папка: исполняемый файл, библиотеки и встроенные профили рядом.
-Одним файлом делать не будем — такой вариант распаковывается во временную
-папку при каждом запуске, дольше стартует и чаще вызывает подозрение
-антивирусов.
+Два варианта:
+
+* **папка** (по умолчанию) — `dist/WordFormatter/`: исполняемый файл,
+  библиотеки и встроенные профили рядом. Это тот вариант, который
+  публикуется в релизах: он проверен полностью, включая открытие окна;
+* **один файл** (`--one-file`) — `dist/WordFormatter.exe`: ничего
+  распаковывать не нужно. Сборка собирается и проходит проверки без графики
+  (`--version`, `--list-profiles`, `--self-check`), но запуск **окна** в этом
+  варианте не подтверждён: у оконной однофайловой сборки процесс завершается
+  ещё до запуска Python. Поэтому вариант помечен как необязательный.
 
 Запуск:
-    python tools/build_exe.py
-
-Результат: dist/WordFormatter/ (Windows) или dist/WordFormatter/ с двоичным
-файлом без расширения (Linux).
+    python tools/build_exe.py              # папка — то, что идёт в релиз
+    python tools/build_exe.py --one-file   # один файл, не подтверждён
 """
 
 from __future__ import annotations
 
+import argparse
 import os
 import shutil
 import subprocess
@@ -32,7 +37,8 @@ def executable_name() -> str:
     return f"{NAME}.exe" if os.name == "nt" else NAME
 
 
-def build_command() -> list[str]:
+def build_command(*, one_file: bool) -> list[str]:
+    variant = "onefile" if one_file else "onedir"
     command = [
         sys.executable,
         "-m",
@@ -43,9 +49,9 @@ def build_command() -> list[str]:
         NAME,
         # Служебные файлы сборки держим в .tmp, чтобы не мусорить в проекте.
         "--specpath",
-        str(WORK_DIR),
+        str(WORK_DIR / variant),
         "--workpath",
-        str(WORK_DIR / "build"),
+        str(WORK_DIR / variant / "build"),
         "--distpath",
         str(DIST_DIR),
         # Встроенные профили обязаны попасть внутрь сборки: приложение ищет
@@ -56,6 +62,8 @@ def build_command() -> list[str]:
         "--hidden-import",
         "pypdf",
     ]
+    if one_file:
+        command.append("--onefile")
     if os.name == "nt":
         # В Windows без этого при запуске открывалось бы чёрное окно консоли.
         command.append("--windowed")
@@ -63,7 +71,44 @@ def build_command() -> list[str]:
     return command
 
 
-def main() -> int:
+def build(*, one_file: bool) -> Path | None:
+    """Собирает выбранный вариант и возвращает путь к исполняемому файлу."""
+    target = DIST_DIR / executable_name() if one_file else DIST_DIR / NAME / executable_name()
+    if target.exists():
+        target.unlink() if target.is_file() else shutil.rmtree(target, ignore_errors=True)
+
+    print(f"Собираю {'один файл' if one_file else 'папку'}…")
+    completed = subprocess.run(build_command(one_file=one_file), cwd=PROJECT_ROOT)
+    if completed.returncode != 0:
+        print("Сборка не удалась.")
+        return None
+    if not target.is_file():
+        print(f"Сборка завершилась, но файла {target} нет.")
+        return None
+    return target
+
+
+def describe(target: Path) -> None:
+    if target.parent == DIST_DIR:
+        size_mb = target.stat().st_size / 1024 / 1024
+        print(f"Готово: {target}")
+        print(f"Размер файла: {size_mb:.0f} МБ")
+    else:
+        size_mb = sum(item.stat().st_size for item in target.parent.rglob("*") if item.is_file())
+        print(f"Готово: {target}")
+        print(f"Размер папки: {size_mb / 1024 / 1024:.0f} МБ")
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description="Сборка переносимой версии приложения")
+    parser.add_argument(
+        "--one-file",
+        action="store_true",
+        help="собрать одним файлом (необязательный вариант: открытие окна "
+        "в такой сборке не подтверждено, для релиза используется папка)",
+    )
+    args = parser.parse_args(argv)
+
     if not MAIN_SCRIPT.is_file():
         print(f"Не найден {MAIN_SCRIPT}")
         return 1
@@ -73,28 +118,16 @@ def main() -> int:
         print("Не установлен PyInstaller. Установите: python -m pip install -r requirements-build.txt")
         return 1
 
-    if DIST_DIR.exists():
-        shutil.rmtree(DIST_DIR)
-
-    print("Собираю приложение…")
-    completed = subprocess.run(build_command(), cwd=PROJECT_ROOT)
-    if completed.returncode != 0:
-        print("Сборка не удалась.")
-        return completed.returncode
-
-    binary = DIST_DIR / NAME / executable_name()
-    if not binary.is_file():
-        print(f"Сборка завершилась, но файла {binary} нет.")
+    target = build(one_file=args.one_file)
+    if target is None:
         return 1
 
-    size_mb = sum(item.stat().st_size for item in (DIST_DIR / NAME).rglob("*") if item.is_file())
-    print()
-    print(f"Готово: {binary}")
-    print(f"Размер папки: {size_mb / 1024 / 1024:.0f} МБ")
+    describe(target)
     print()
     print("Проверка:")
-    print(f'  "{binary}" --version')
-    print(f'  "{binary}" --list-profiles')
+    print(f'  "{target}" --version')
+    print(f'  "{target}" --list-profiles')
+    print(f'  "{target}" --self-check')
     return 0
 
 

@@ -1,5 +1,9 @@
 # Word Formatter
 
+[![Последняя версия](https://img.shields.io/github/v/release/MidshipFire5/word-formatter?label=%D0%B2%D0%B5%D1%80%D1%81%D0%B8%D1%8F&color=2f6bff)](https://github.com/MidshipFire5/word-formatter/releases/latest)
+[![Проверки](https://github.com/MidshipFire5/word-formatter/actions/workflows/ci.yml/badge.svg)](https://github.com/MidshipFire5/word-formatter/actions/workflows/ci.yml)
+[![Лицензия](https://img.shields.io/github/license/MidshipFire5/word-formatter?label=%D0%BB%D0%B8%D1%86%D0%B5%D0%BD%D0%B7%D0%B8%D1%8F&color=2f6bff)](LICENSE)
+
 Приложение для Windows и Linux, которое приводит документ Word (`.docx`)
 к требованиям выбранного профиля оформления: шрифт, поля, отступы, интервалы,
 заголовки, подписи, таблицы, сноски и нумерация страниц.
@@ -19,25 +23,40 @@
 
 ---
 
-## Скачать готовую сборку для Windows
+## Скачать
 
-**[Скачать Word Formatter для Windows](https://github.com/MidshipFire5/word-formatter/releases/latest)**
-— архив 44 МБ, **Python не нужен**.
+### Windows: готовая сборка, Python не нужен
 
-1. Скачайте `WordFormatter-…-windows.zip` из раздела «Assets».
-2. Распакуйте архив **целиком** в удобную папку, например `C:\WordFormatter`.
-3. Запустите `WordFormatter.exe`.
+**➡ [Скачать WordFormatter-windows.zip](https://github.com/MidshipFire5/word-formatter/releases/latest/download/WordFormatter-windows.zip)**
+— 41 МБ. Ссылка всегда ведёт на последнюю версию.
+
+1. Распакуйте архив в любую папку — **внутри сразу лежит `WordFormatter.exe`**.
+2. Запустите его двойным щелчком.
+3. Чтобы не искать файл каждый раз, закрепите `WordFormatter.exe` на панели
+   задач.
 
 Установщика нет: программа ничего не пишет в системные папки, не требует прав
 администратора и удаляется вместе с папкой. При первом запуске Windows покажет
 «Неизвестный издатель» — у сборки нет платной подписи кода, это ожидаемо.
 Подробности — в разделе [«Запуск в Windows»](#запуск-в-windows).
 
+Проверить, что приложение работает, можно командой в папке программы:
+
+```
+WordFormatter.exe --self-check
+```
+
+### Linux
+
+Готовой сборки нет: скачайте исходный код и запустите `bash run_linux.sh` —
+скрипт сам подготовит окружение. Подробности в разделе
+[«Запуск в Linux»](#запуск-в-linux).
+
 ---
 
 ## Содержание
 
-- [Скачать готовую сборку для Windows](#скачать-готовую-сборку-для-windows)
+- [Скачать](#скачать)
 - [Что приложение делает](#что-приложение-делает)
 - [Чего приложение не делает](#чего-приложение-не-делает)
 - [Системные требования](#системные-требования)
@@ -136,25 +155,17 @@
 
 ## Запуск в Windows
 
-### Вариант 1: обычный запуск (нужен Python)
+### Вариант 1: готовый `.exe` — ничего устанавливать не нужно
 
-1. Откройте страницу проекта: **https://github.com/MidshipFire5/word-formatter**
-2. Скачайте проект: кнопка **Code → Download ZIP**.
-3. Распакуйте архив **целиком** в удобную папку. Важно распаковать, а не
-   открывать из архива: приложение создаёт рядом с собой окружение `.venv`.
-4. Двойной щелчок по `run_windows.bat`.
-
-### Вариант 2: готовый `.exe` (Python не нужен)
-
-В разделе **Actions** на странице проекта есть задача
-**«Сборка переносимой версии»**: в её артефактах лежит архив
-`WordFormatter-windows` — распакуйте в удобную папку и запустите
-`WordFormatter.exe`. Python устанавливать не нужно, но интернет для
-скачивания самого архива всё же понадобится.
+1. Скачайте
+   **[WordFormatter-windows.zip](https://github.com/MidshipFire5/word-formatter/releases/latest/download/WordFormatter-windows.zip)**
+   (41 МБ).
+2. Распакуйте в любую папку: внутри сразу лежит `WordFormatter.exe`.
+3. Запустите его двойным щелчком.
 
 Что полезно знать про такую сборку:
 
-- она занимает около **100 МБ** — внутрь входит сам Python и библиотеки
+- занять она будет около **100 МБ** — внутрь входит сам Python и библиотеки
   интерфейса;
 - Windows покажет предупреждение **«Неизвестный издатель»** при первом
   запуске: у сборки нет платной подписи кода. Это ожидаемо;
@@ -162,14 +173,15 @@
   по-прежнему хранятся в `%APPDATA%\WordFormatter`;
 - проверить, что всё работает, можно командой `WordFormatter.exe --self-check`.
 
-Собрать такую версию самому:
+### Вариант 2: обычный запуск (нужен Python)
 
-```bash
-python -m pip install -r requirements.txt -r requirements-build.txt
-python tools/build_exe.py
-```
+Если хочется запускать из исходников:
 
-Готовое приложение появится в папке `dist/WordFormatter`.
+1. Откройте страницу проекта: **https://github.com/MidshipFire5/word-formatter**
+2. Скачайте проект: кнопка **Code → Download ZIP**.
+3. Распакуйте архив **целиком** в удобную папку. Важно распаковать, а не
+   открывать из архива: приложение создаёт рядом с собой окружение `.venv`.
+4. Двойной щелчок по `run_windows.bat`.
 
 При первом запуске `run_windows.bat` делает следующее:
 
@@ -188,6 +200,15 @@ python tools/build_exe.py
 `run_windows.bat` и следуйте инструкции на экране — нужна версия с сайта
 [python.org](https://www.python.org/downloads/windows/) с галочкой
 «Add python.exe to PATH».
+
+### Собрать `.exe` самому
+
+```bash
+python -m pip install -r requirements.txt -r requirements-build.txt
+python tools/build_exe.py
+```
+
+Готовое приложение появится в папке `dist/WordFormatter`.
 
 ## Запуск в Linux
 
