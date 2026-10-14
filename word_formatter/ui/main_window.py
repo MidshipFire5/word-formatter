@@ -26,6 +26,7 @@ from PySide6.QtWidgets import (
     QPlainTextEdit,
     QProgressBar,
     QPushButton,
+    QScrollArea,
     QVBoxLayout,
     QWidget,
 )
@@ -42,6 +43,13 @@ logger = logging.getLogger(__name__)
 
 DOCX_FILTER = "Документ Word (*.docx)"
 REPORT_FILTER = "Текстовый файл (*.txt)"
+
+# Сколько названий профилей должно быть видно в списке без прокрутки.
+PROFILE_ROWS_VISIBLE = 5
+# Высота строки, когда список ещё пуст и измерить её не по чему.
+PROFILE_FALLBACK_ROW_HEIGHT = 46
+# Минимальная высота карточки отчёта: она не должна схлопываться в полоску.
+REPORT_CARD_MIN_HEIGHT = 200
 
 HINT_START = "Выберите профиль оформления и документ Word."
 HINT_NEED_FILE = "Сначала выберите документ Word."
@@ -110,18 +118,30 @@ class MainWindow(QMainWindow):
     # --- построение интерфейса ------------------------------------------------
 
     def _build_ui(self) -> None:
-        background = QWidget()
-        background.setObjectName("background")
-        self.setCentralWidget(background)
+        content = QWidget()
+        content.setObjectName("background")
 
-        layout = QVBoxLayout(background)
+        layout = QVBoxLayout(content)
         layout.setContentsMargins(22, 20, 22, 20)
         layout.setSpacing(16)
 
         layout.addLayout(self._build_header())
         layout.addLayout(self._build_profile_area(), 2)
         layout.addWidget(self._build_document_card())
-        layout.addWidget(self._build_report_card(), 4)
+
+        report_card = self._build_report_card()
+        report_card.setMinimumHeight(REPORT_CARD_MIN_HEIGHT)
+        layout.addWidget(report_card, 4)
+
+        # Содержимое прокручивается. Без этого уменьшение окна сжимало бы
+        # список профилей до одной строки: лучше прокрутка, чем неудобный выбор.
+        scroll = QScrollArea()
+        scroll.setObjectName("contentScroll")
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QScrollArea.NoFrame)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        scroll.setWidget(content)
+        self.setCentralWidget(scroll)
 
     def _build_header(self) -> QHBoxLayout:
         title = QLabel(APP_NAME)
@@ -321,6 +341,24 @@ class MainWindow(QMainWindow):
 
         if self.profile_list.count():
             self.profile_list.setCurrentRow(0)
+
+        self._fit_profile_list()
+
+    def _fit_profile_list(self) -> None:
+        """Оставляет в списке профилей место хотя бы для пяти названий.
+
+        Без минимальной высоты при уменьшении окна список сжимается до одной
+        строки, и выбирать профиль становится неудобно. Названия переносятся
+        по строкам, поэтому высота строки берётся по самой высокой из первых
+        строк списка.
+        """
+        rows_visible = PROFILE_ROWS_VISIBLE
+        rows = min(self.profile_list.count(), rows_visible)
+        heights = [self.profile_list.sizeHintForRow(index) for index in range(rows)]
+        row_height = max(heights) if heights else PROFILE_FALLBACK_ROW_HEIGHT
+        self.profile_list.setMinimumHeight(
+            row_height * rows_visible + 2 * self.profile_list.frameWidth() + 8
+        )
 
     def select_profile(self, profile_id: str) -> bool:
         """Выбирает профиль по идентификатору. Возвращает признак успеха."""

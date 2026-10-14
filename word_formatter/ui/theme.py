@@ -77,6 +77,16 @@ def stylesheet() -> str:
         background: {BACKGROUND};
     }}
 
+    /* Прокрутка содержимого окна: фон должен оставаться общим */
+    QScrollArea#contentScroll {{
+        background: {BACKGROUND};
+        border: none;
+    }}
+
+    QScrollArea#contentScroll > QWidget > QWidget {{
+        background: {BACKGROUND};
+    }}
+
     QLabel {{
         color: {TEXT};
     }}
