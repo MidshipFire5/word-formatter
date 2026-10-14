@@ -167,6 +167,14 @@ class MainWindow(QMainWindow):
         header.setSpacing(16)
         header.addLayout(text_column, 1)
         header.addWidget(version)
+
+        self.problem_button = QPushButton("Сообщить об ошибке")
+        self.problem_button.setToolTip(
+            "Открыть окно сообщения: опишите проблему, а приложение приложит "
+            "к письму сведения о системе и последние строки журнала"
+        )
+        self.problem_button.clicked.connect(self.report_problem)
+        header.addWidget(self.problem_button, 0, Qt.AlignTop)
         return header
 
     def _build_profile_area(self) -> QHBoxLayout:
@@ -288,6 +296,49 @@ class MainWindow(QMainWindow):
         self.report_view.setPlainText(REPORT_PLACEHOLDER)
         card_layout.addWidget(self.report_view, 1)
         return card
+
+    # --- сообщение о проблеме -------------------------------------------------
+
+    def report_problem(self) -> None:
+        """Открывает окно сообщения о проблеме.
+
+        Отчёт собирается здесь и никуда не отправляется сам: человек видит
+        текст письма и решает, отправлять ли его.
+        """
+        from word_formatter.ui.problem_report import ProblemContext, ProblemReportDialog
+
+        context = ProblemContext(
+            action=self.status_label.text(),
+            error=getattr(self, "_last_error", ""),
+            document=self._source_file.name if self._source_file else "",
+            document_size=self._document_size_text(),
+            profile=self._profile_summary(),
+            result=self._result_summary(),
+        )
+        ProblemReportDialog(context, parent=self).exec()
+
+    def _document_size_text(self) -> str:
+        if self._source_file is None:
+            return ""
+        try:
+            return f"{self._source_file.stat().st_size / 1024:.0f} КБ"
+        except OSError:
+            return ""
+
+    def _profile_summary(self) -> str:
+        if self._profile is None:
+            return ""
+        return f"{self._profile.name} ({self._profile.id})"
+
+    def _result_summary(self) -> str:
+        if self._result is None:
+            return ""
+        check = (
+            "проверка сохранности пройдена"
+            if self._result.verification.passed
+            else "проверка нашла расхождения"
+        )
+        return f"{self._result.output_path.name}, {check}"
 
     # --- перетаскивание файла -------------------------------------------------
 
@@ -666,6 +717,10 @@ class MainWindow(QMainWindow):
     def _set_status(self, message: str, state: str = "info") -> None:
         self.status_label.setText(message)
         theme.set_state(self.status_label, state)
+        # Последняя ошибка запоминается здесь: все ветки отказов сообщают
+        # о себе именно этим вызовом, и она попадёт в отчёт о проблеме.
+        if state == "error":
+            self._last_error = message
 
     def _set_busy(self, busy: bool) -> None:
         self._busy = busy
