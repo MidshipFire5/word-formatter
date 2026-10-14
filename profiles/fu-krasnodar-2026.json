@@ -1,0 +1,171 @@
+{
+  "id": "fu-krasnodar-2026",
+  "name": "Финансовый университет, Краснодарский филиал — письменные работы (2026)",
+  "description": "Оформление письменных работ по методическим указаниям Краснодарского филиала Финуниверситета 2026 года: выпускные квалификационные работы, курсовые работы, отчёты по практике, рефераты.",
+  "version": "1.0.0",
+  "demo": false,
+  "source": {
+    "title": "Методические указания по оформлению письменных работ",
+    "authors": "сост. А. С. Молчан, О. Ю. Франциско",
+    "place": "Краснодар: Краснодарский филиал Финуниверситета",
+    "year": 2026,
+    "pages": 17,
+    "note": "Требования взяты из таблицы 1 «Требования к оформлению выпускной квалификационной работы»."
+  },
+  "appliesTo": [
+    "выпускная квалификационная работа",
+    "курсовая работа",
+    "отчёт по практике",
+    "реферат"
+  ],
+  "page": {
+    "format": "A4",
+    "orientation": "portrait",
+    "marginsMm": { "left": 30, "right": 15, "top": 20, "bottom": 20 },
+    "headerMm": 20,
+    "footerMm": 12.5
+  },
+  "body": {
+    "font": "Times New Roman",
+    "sizePt": 14,
+    "alignment": "justify",
+    "firstLineIndentCm": 1.25,
+    "lineSpacing": 1.5,
+    "spaceBeforePt": 0,
+    "spaceAfterPt": 0,
+    "bold": false,
+    "italic": false,
+    "color": null,
+    "removeItalic": true,
+    "removeUnderline": true
+  },
+  "headings": {
+    "maxLevel": 3,
+    "noHyphenation": true,
+    "structural": {
+      "titles": [
+        "ВВЕДЕНИЕ",
+        "ЗАКЛЮЧЕНИЕ",
+        "СПИСОК ИСПОЛЬЗОВАННЫХ ИСТОЧНИКОВ",
+        "СОДЕРЖАНИЕ",
+        "ПРИЛОЖЕНИЕ"
+      ],
+      "uppercase": true,
+      "font": "Times New Roman",
+      "sizePt": 14,
+      "bold": true,
+      "italic": false,
+      "color": null,
+      "alignment": "center",
+      "firstLineIndentCm": 0,
+      "lineSpacing": 1.0,
+      "spaceBeforePt": 0,
+      "spaceAfterPt": 0
+    },
+    "levels": {
+      "1": {
+        "font": "Times New Roman",
+        "sizePt": 14,
+        "bold": true,
+        "italic": false,
+        "color": null,
+        "alignment": "justify",
+        "firstLineIndentCm": 1.25,
+        "lineSpacing": 1.0,
+        "spaceBeforePt": 0,
+        "spaceAfterPt": 0
+      },
+      "2": {
+        "font": "Times New Roman",
+        "sizePt": 14,
+        "bold": true,
+        "italic": false,
+        "color": null,
+        "alignment": "justify",
+        "firstLineIndentCm": 1.25,
+        "lineSpacing": 1.0,
+        "spaceBeforePt": 0,
+        "spaceAfterPt": 0
+      },
+      "3": {
+        "font": "Times New Roman",
+        "sizePt": 14,
+        "bold": true,
+        "italic": false,
+        "color": null,
+        "alignment": "justify",
+        "firstLineIndentCm": 1.25,
+        "lineSpacing": 1.0,
+        "spaceBeforePt": 0,
+        "spaceAfterPt": 0
+      }
+    }
+  },
+  "captions": {
+    "figure": {
+      "font": "Times New Roman",
+      "sizePt": 14,
+      "alignment": "center",
+      "firstLineIndentCm": 0,
+      "lineSpacing": 1.0,
+      "spaceBeforePt": 0,
+      "spaceAfterPt": 0,
+      "noHyphenation": true,
+      "position": "below"
+    },
+    "table": {
+      "font": "Times New Roman",
+      "sizePt": 14,
+      "alignment": "left",
+      "firstLineIndentCm": 0,
+      "lineSpacing": 1.0,
+      "spaceBeforePt": 0,
+      "spaceAfterPt": 0,
+      "noHyphenation": true,
+      "position": "above"
+    }
+  },
+  "tables": {
+    "font": "Times New Roman",
+    "fontSizePt": 12,
+    "lineSpacing": 1.0,
+    "firstLineIndentCm": 0,
+    "headerRowAlign": "center",
+    "numericCellAlign": "center",
+    "textCellAlign": "left",
+    "markerCells": ["", "–", "-", "—", "х", "x", "Х", "X"]
+  },
+  "footnotes": {
+    "font": "Times New Roman",
+    "fontSizePt": 10,
+    "lineSpacing": 1.0
+  },
+  "lists": {
+    "applyParagraphFormatting": true,
+    "replaceMarkers": false,
+    "firstLineIndentCm": 1.25
+  },
+  "pageNumbers": {
+    "enabled": true,
+    "position": "bottom-center",
+    "font": "Times New Roman",
+    "fontSizePt": 12,
+    "skipFirstPage": true
+  },
+  "hyphenation": {
+    "enabled": true,
+    "excludeHeadings": true,
+    "excludeCaptions": true
+  },
+  "blankLines": {
+    "insert": true,
+    "style": "body"
+  },
+  "limitations": [
+    "Автоматическое содержание не пересчитывается: поле помечается как требующее обновления, пересчёт выполняет Word при открытии.",
+    "Формулы в редакторе формул не переоформляются: их можно только выровнять как абзац.",
+    "Запрет переноса внутри сокращений, аббревиатур и чисел Word не поддерживает как настройку — такие места выводятся в отчёт для ручной проверки.",
+    "Маркеры списков не заменяются на тире: оформляются только абзацы элементов списка.",
+    "Нумерация страниц настраивается для первой страницы документа, которая считается титульным листом."
+  ]
+}

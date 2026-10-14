@@ -1,0 +1,21 @@
+# Правила работы с окончаниями строк в репозитории.
+#
+# Это важно для Linux-скрипта: если git сохранит его с переносами CRLF,
+# он перестанет запускаться в Linux.
+*.sh text eol=lf
+*.bat text eol=crlf
+*.py text eol=lf
+*.md text eol=lf
+*.json text eol=lf
+*.yml text eol=lf
+*.txt text eol=lf
+*.ini text eol=lf
+LICENSE text eol=lf
+
+# Двоичные файлы git не должен преобразовывать.
+*.docx binary
+*.png binary
+*.pdf binary
+
+# Диффы для сгенерированных файлов не нужны.
+examples/*.docx -diff

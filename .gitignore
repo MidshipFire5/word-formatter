@@ -1,0 +1,35 @@
+# Локальное виртуальное окружение — создаётся скриптами запуска
+.venv/
+venv/
+env/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# Тесты и инструменты
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Служебный каталог для временных файлов внутри проекта
+.tmp/
+
+# Отчёты, созданные приложением во время ручных проверок
+*.report.txt
+out/
+
+# Редакторы и ОС
+.vscode/
+.idea/
+Thumbs.db
+Desktop.ini
+*.swp
+
+# Личные профили оформления и локальные логи
+local_profiles/
+*.log
