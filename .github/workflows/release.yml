@@ -1,0 +1,68 @@
+name: Выпуск версии
+
+# Релиз собирается по тегу вида v0.1.0: на обычные коммиты эта задача
+# не запускается, чтобы не публиковать сборки случайно.
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Сборка и публикация релиза
+    runs-on: windows-latest
+    env:
+      PYTHONUTF8: "1"
+    steps:
+      - name: Получение кода
+        uses: actions/checkout@v7
+
+      - name: Установка Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Установка зависимостей
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt -r requirements-build.txt
+
+      - name: Сборка переносимой версии
+        run: python tools/build_exe.py
+
+      - name: Проверка собранного приложения
+        shell: pwsh
+        run: |
+          dist/WordFormatter/WordFormatter.exe --version
+          dist/WordFormatter/WordFormatter.exe --list-profiles
+          dist/WordFormatter/WordFormatter.exe --self-check
+
+      - name: Упаковка архива для скачивания
+        shell: pwsh
+        run: |
+          # Внутри архива должна быть одна папка: человек распаковывает её
+          # целиком и запускает WordFormatter.exe.
+          New-Item -ItemType Directory -Path pack -Force | Out-Null
+          Copy-Item -Path dist/WordFormatter -Destination pack/WordFormatter -Recurse
+          Compress-Archive -Path pack/WordFormatter -DestinationPath WordFormatter-windows.zip
+          (Get-FileHash WordFormatter-windows.zip -Algorithm SHA256).Hash.ToLower() |
+            ForEach-Object { "$_  WordFormatter-windows.zip" } |
+            Set-Content -Path WordFormatter-windows.zip.sha256 -Encoding utf8
+          Get-Content WordFormatter-windows.zip.sha256
+
+      - name: Публикация релиза
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $tag = "${{ github.ref_name }}"
+          gh release create $tag `
+            WordFormatter-windows.zip `
+            WordFormatter-windows.zip.sha256 `
+            --title "Word Formatter $tag" `
+            --generate-notes `
+            --verify-tag
