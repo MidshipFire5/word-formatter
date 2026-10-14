@@ -537,6 +537,12 @@ class MainWindow(QMainWindow):
             return None
 
         name = dialog.profile_name()
+        # Значения, исправленные и вписанные человеком в таблице, попадают
+        # в профиль вместо найденных приложением.
+        edits = dialog.edited_values()
+        if edits:
+            draft.apply_edits(edits)
+
         directory = self._catalog.directories[1]
         try:
             saved = save_draft_profile(draft, name=name, directory=directory)

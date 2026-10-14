@@ -125,11 +125,65 @@ def test_dialog_shows_origin_of_each_value(qtbot, methodology: Path) -> None:
     )
     qtbot.addWidget(dialog)
 
-    item = draft.values[0]
-    text = dialog._origin_and_evidence(item)
+    row = dialog._rows[0]
+    text = dialog._source_text(row)
 
     assert "из текста методички" in text
-    assert item.evidence[:20] in text
+    assert row.evidence[:20] in text
+
+
+def test_dialog_values_can_be_edited(qtbot, methodology: Path) -> None:
+    """Столбец «Значение» редактируется: правку можно внести сразу."""
+    draft = build_profile_draft(methodology)
+    dialog = MethodologyDraftDialog(
+        draft, source_name="методичка", suggested_name="Моя методичка"
+    )
+    qtbot.addWidget(dialog)
+
+    assert dialog.edited_values() == {}
+
+    index = next(
+        position for position, row in enumerate(dialog._rows) if row.path == "body.sizePt"
+    )
+    # В методичке указано 12 пт — исправляем на другое значение.
+    dialog._table.item(index, 1).setText("13")
+
+    assert dialog.edited_values() == {"body.sizePt": 13.0}
+
+
+def test_dialog_shows_empty_rows_for_missing_requirements(qtbot, methodology: Path) -> None:
+    """Чего приложение не нашло — то пустое, и его можно вписать."""
+    draft = build_profile_draft(methodology)
+    dialog = MethodologyDraftDialog(
+        draft, source_name="методичка", suggested_name="Моя методичка"
+    )
+    qtbot.addWidget(dialog)
+
+    empty_rows = [
+        (position, row)
+        for position, row in enumerate(dialog._rows)
+        if not row.found
+    ]
+    assert empty_rows, "в методичке требований меньше, чем умеет профиль"
+
+    position, row = empty_rows[0]
+    cell = dialog._table.item(position, 1)
+    assert cell.text() == ""
+    assert cell.toolTip()
+    assert "не найдено" in dialog._table.item(position, 2).text()
+
+    cell.setText("1,5")
+    assert dialog.edited_values().get(row.path) == 1.5
+
+
+def test_dialog_ignores_unchanged_rows(qtbot, methodology: Path) -> None:
+    draft = build_profile_draft(methodology)
+    dialog = MethodologyDraftDialog(
+        draft, source_name="методичка", suggested_name="Моя методичка"
+    )
+    qtbot.addWidget(dialog)
+
+    assert dialog.edited_values() == {}
 
 
 def test_dialog_requires_a_name(qtbot, methodology: Path) -> None:
@@ -143,6 +197,38 @@ def test_dialog_requires_a_name(qtbot, methodology: Path) -> None:
 
 
 # --- создание профиля целиком --------------------------------------------------
+
+
+def test_edited_value_lands_in_the_saved_profile(
+    qtbot, window: MainWindow, methodology: Path, user_profile_dir: Path, monkeypatch
+) -> None:
+    """Правка в таблице сохраняется в профиль, а не теряется."""
+    index_holder: dict[str, int] = {}
+
+    class EditingDialog(MethodologyDraftDialog):
+        def __init__(self, *args, **kwargs) -> None:
+            super().__init__(*args, **kwargs)
+            position = next(
+                place for place, row in enumerate(self._rows) if row.path == "body.sizePt"
+            )
+            self._table.item(position, 1).setText("13")
+
+        def exec(self) -> int:
+            return QDialog.Accepted
+
+    monkeypatch.setattr(window_module_methodology(), "MethodologyDraftDialog", EditingDialog)
+
+    profile_id = window.create_profile_from_methodology(methodology)
+
+    assert profile_id is not None
+    profile = load_profile_from_path(user_profile_dir / f"{profile_id}.json")
+    assert profile.body.size_pt == 13
+
+
+def window_module_methodology():
+    from word_formatter.ui import methodology as module
+
+    return module
 
 
 def test_profile_is_created_from_methodology(

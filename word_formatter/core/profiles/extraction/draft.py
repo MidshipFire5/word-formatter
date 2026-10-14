@@ -18,6 +18,48 @@ from typing import Any
 
 ORIGIN_TEXT = "текст"
 ORIGIN_SAMPLE = "образец"
+ORIGIN_EDIT = "правка"
+
+# Человеческие названия значений-перечислений: их видно в окне проверки,
+# их же можно вписать руками вместо кода.
+VALUE_CODES: dict[str, str] = {
+    "по левому краю": "left",
+    "по центру": "center",
+    "по правому краю": "right",
+    "по ширине": "justify",
+    "под элементом": "below",
+    "над элементом": "above",
+    "под рисунком": "below",
+    "над рисунком": "above",
+    "не переносить": "keep",
+    "внизу по центру": "bottom-center",
+    "внизу слева": "bottom-left",
+    "внизу справа": "bottom-right",
+    "вверху по центру": "top-center",
+    "вверху слева": "top-left",
+    "вверху справа": "top-right",
+}
+TRUE_WORDS = ("да", "yes", "true", "1", "истина", "+")
+FALSE_WORDS = ("нет", "no", "false", "0", "ложь", "-")
+
+# Названия кодов для показа человеку. Одно значение — одно название:
+# «above» это «над элементом», потому что для подписи рисунка и для названия
+# таблицы это выглядит по-разному, а в таблице столбец общий.
+CODE_TITLES: dict[str, str] = {
+    "left": "по левому краю",
+    "center": "по центру",
+    "right": "по правому краю",
+    "justify": "по ширине",
+    "above": "над элементом",
+    "below": "под элементом",
+    "keep": "не переносить",
+    "bottom-center": "внизу по центру",
+    "bottom-left": "внизу слева",
+    "bottom-right": "внизу справа",
+    "top-center": "вверху по центру",
+    "top-left": "вверху слева",
+    "top-right": "вверху справа",
+}
 
 # Поля, которые приложение умеет распознавать. Всё, что не нашлось,
 # попадает в список «проверьте»: молча подставлять типовые значения нельзя.
@@ -243,6 +285,67 @@ class ProfileDraft:
     def value_list(self) -> list[DraftValue]:
         return sorted(self.values, key=lambda item: item.path)
 
+    def editable_rows(self) -> list["DraftRow"]:
+        """Строки для окна проверки: найденное и то, что осталось найти человеку.
+
+        Ненайденные требования показываются с пустым значением: типовое
+        значение подставляется только при сохранении, если человек ничего
+        не вписал.
+        """
+        rows = [
+            DraftRow(
+                path=item.path,
+                title=item.title or item.path,
+                value=item.value,
+                origin=item.origin,
+                evidence=item.evidence,
+                found=True,
+            )
+            for item in self.value_list()
+        ]
+
+        found = self.found_paths
+        rows.extend(
+            DraftRow(
+                path=path,
+                title=title,
+                value=None,
+                origin="",
+                evidence="",
+                found=False,
+            )
+            for path, _section, title in DESCRIBED_FIELDS
+            if path not in found
+        )
+        return rows
+
+    def apply_edits(self, edits: dict[str, Any]) -> int:
+        """Применяет значения, исправленные человеком в окне проверки.
+
+        Возвращает число изменённых требований. Пустое значение означает
+        «оставить как было»: типовое значение из основы профиля.
+        """
+        changed = 0
+        for path, value in edits.items():
+            if value is None:
+                continue
+            existing = self.value_for(path)
+            if existing is not None:
+                if existing.value == value:
+                    continue
+                self.values = [item for item in self.values if item.path != path]
+            self.values.append(
+                DraftValue(
+                    path=path,
+                    value=value,
+                    origin=ORIGIN_EDIT,
+                    evidence="исправлено вами при проверке профиля",
+                    title=existing.title if existing is not None else _title_for(path),
+                )
+            )
+            changed += 1
+        return changed
+
     def to_profile(self, *, profile_id: str, name: str, description: str = "") -> dict[str, Any]:
         """Собирает из черновика полноценный профиль."""
         profile = copy.deepcopy(BASE_PROFILE)
@@ -276,6 +379,78 @@ class ProfileDraft:
         if self.missing:
             lines.append(f"Не найдено (осталось типовым): {len(self.missing)}")
         return "\n".join(lines)
+
+
+@dataclass(frozen=True)
+class DraftRow:
+    """Строка окна проверки: требование, значение и его источник."""
+
+    path: str
+    title: str
+    value: Any
+    origin: str
+    evidence: str
+    found: bool
+
+    @property
+    def placeholder(self) -> str:
+        """Подсказка для пустого поля: что приложение поставит по умолчанию."""
+        if self.found:
+            return ""
+        return f"не найдено — будет типовое значение ({_base_value(self.path)})"
+
+
+def _title_for(path: str) -> str:
+    for known_path, _section, title in DESCRIBED_FIELDS:
+        if known_path == path:
+            return title
+    return path
+
+
+def _base_value(path: str) -> str:
+    node: Any = BASE_PROFILE
+    for part in path.split("."):
+        if not isinstance(node, dict) or part not in node:
+            return "—"
+        node = node[part]
+    return str(node)
+
+
+def coerce_value(path: str, text: str) -> Any:
+    """Превращает вписанный человеком текст в значение нужного типа.
+
+    Пустая строка означает «оставить типовое значение» и возвращает None.
+    """
+    cleaned = text.strip()
+    if not cleaned:
+        return None
+
+    lowered = cleaned.lower()
+    if lowered in TRUE_WORDS:
+        return True
+    if lowered in FALSE_WORDS:
+        return False
+    if lowered in VALUE_CODES:
+        return VALUE_CODES[lowered]
+
+    base = _base_value_object(path)
+    if isinstance(base, str):
+        return cleaned
+
+    number = cleaned.replace(",", ".").replace(" ", "").replace("пт", "").replace("мм", "")
+    try:
+        return float(number)
+    except ValueError:
+        return None
+
+
+def _base_value_object(path: str) -> Any:
+    node: Any = BASE_PROFILE
+    for part in path.split("."):
+        if not isinstance(node, dict) or part not in node:
+            return None
+        node = node[part]
+    return node
 
 
 def _set(profile: dict[str, Any], path: str, value: Any) -> None:
