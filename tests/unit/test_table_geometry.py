@@ -140,11 +140,14 @@ def test_properties_order_matches_schema(make_context, profile) -> None:
     assert names.index("tblW") < names.index("tblInd")
 
 
-def test_custom_indent_is_applied(profile_dict: dict) -> None:
+def test_custom_indent_is_applied(profile_dict: dict, tmp_path: Path) -> None:
     """Профиль может задать отступ числом — тогда он и выставляется."""
     data = copy.deepcopy(profile_dict)
     data["tables"]["indentCm"] = 1.5
-    settings = load_profile_from_path_dict(data).tables
+    path = tmp_path / "свой-отступ.json"
+    path.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+
+    settings = load_profile_from_path(path).tables
 
     document = Document()
     table = build_table(document)
@@ -153,19 +156,6 @@ def test_custom_indent_is_applied(profile_dict: dict) -> None:
 
     assert indent_of(table) == str(Cm(1.5).twips)
     assert any("отступ" in action for action in actions)
-
-
-def load_profile_from_path_dict(data: dict):
-    """Собирает профиль из словаря через настоящую загрузку."""
-    import json as json_module
-    import tempfile
-
-    with tempfile.NamedTemporaryFile(
-        "w", suffix=".json", delete=False, encoding="utf-8"
-    ) as handle:
-        json_module.dump(data, handle, ensure_ascii=False)
-        name = handle.name
-    return load_profile_from_path(Path(name))
 
 
 def test_position_is_reported(make_context, profile) -> None:

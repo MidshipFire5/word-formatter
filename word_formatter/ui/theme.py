@@ -311,6 +311,68 @@ def stylesheet() -> str:
         border-radius: 6px;
         padding: 6px 8px;
     }}
+
+    /* Поля ввода и таблицы: нужны в окне проверки методички */
+    QLineEdit {{
+        background: {FIELD};
+        border: 1px solid {BORDER};
+        border-radius: {RADIUS_CONTROL}px;
+        padding: 7px 10px;
+        color: {TEXT};
+        selection-background-color: {ACCENT};
+        selection-color: #FFFFFF;
+    }}
+
+    QLineEdit:focus {{
+        border: 1px solid {ACCENT};
+    }}
+
+    QTabWidget::pane {{
+        border: 1px solid {BORDER};
+        border-radius: {RADIUS_CONTROL}px;
+        background: {CARD};
+        top: -1px;
+    }}
+
+    QTabBar::tab {{
+        background: transparent;
+        color: {TEXT_MUTED};
+        padding: 8px 14px;
+        margin-right: 4px;
+        border: 1px solid transparent;
+        border-top-left-radius: {RADIUS_CONTROL}px;
+        border-top-right-radius: {RADIUS_CONTROL}px;
+    }}
+
+    QTabBar::tab:selected {{
+        background: {CARD};
+        color: {TEXT};
+        border: 1px solid {BORDER};
+        border-bottom-color: {CARD};
+    }}
+
+    QTabBar::tab:hover:!selected {{
+        color: {ACCENT_PRESSED};
+    }}
+
+    QTableWidget {{
+        background: {CARD};
+        alternate-background-color: {FIELD};
+        border: none;
+        gridline-color: {BORDER};
+        color: {TEXT};
+        selection-background-color: {ACCENT_SOFT};
+        selection-color: {TEXT};
+    }}
+
+    QHeaderView::section {{
+        background: {FIELD};
+        color: {TEXT_MUTED};
+        border: none;
+        border-bottom: 1px solid {BORDER};
+        padding: 7px 8px;
+        font-weight: 600;
+    }}
     """
 
 

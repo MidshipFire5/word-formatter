@@ -24,6 +24,10 @@ class ProfileError(FormatterError):
     """Профиль оформления не найден, повреждён или не соответствует формату."""
 
 
+class MethodologyError(FormatterError):
+    """Методичку не удалось прочитать или в ней не нашлось требований."""
+
+
 class DocumentError(FormatterError):
     """Документ нельзя открыть или обработать."""
 

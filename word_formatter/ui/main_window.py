@@ -163,6 +163,25 @@ class MainWindow(QMainWindow):
         self.profile_list.currentItemChanged.connect(self._on_profile_changed)
         profiles_layout.addWidget(self.profile_list, 1)
 
+        from word_formatter.ui.methodology import DropFileButton
+
+        self.create_profile_button = DropFileButton("Создать профиль из методички…")
+        self.create_profile_button.setToolTip(
+            "Выберите файл методички — Word, PDF или текстовый — "
+            "или перетащите его прямо на эту кнопку"
+        )
+        self.create_profile_button.clicked.connect(self.choose_methodology_file)
+        self.create_profile_button.fileDropped.connect(self.create_profile_from_methodology)
+        profiles_layout.addWidget(self.create_profile_button)
+
+        profile_hint = QLabel(
+            "Нет вашей методички в списке? Перетащите её файл на кнопку выше — "
+            "приложение прочитает требования и покажет, что нашло."
+        )
+        profile_hint.setObjectName("cardHint")
+        profile_hint.setWordWrap(True)
+        profiles_layout.addWidget(profile_hint)
+
         description_card, description_layout = _card(
             "Что делает профиль", "Источник требований и ограничения выбранного профиля."
         )
@@ -378,6 +397,74 @@ class MainWindow(QMainWindow):
             ]
         )
         return "\n".join(lines)
+
+    # --- создание профиля из методички ----------------------------------------
+
+    def choose_methodology_file(self) -> None:
+        """Открывает диалог выбора файла методички."""
+        from word_formatter.core.profiles.extraction import FILE_FILTER
+
+        selected, _filter = QFileDialog.getOpenFileName(
+            self, "Выберите файл методички", str(Path.home()), FILE_FILTER
+        )
+        if selected:
+            self.create_profile_from_methodology(selected)
+
+    def create_profile_from_methodology(self, path: str | Path) -> str | None:
+        """Читает методичку, показывает найденное и сохраняет профиль.
+
+        Возвращает идентификатор созданного профиля или None, если человек
+        отказался или файл прочитать не удалось.
+        """
+        from PySide6.QtWidgets import QApplication, QDialog
+
+        from word_formatter.core.errors import FormatterError
+        from word_formatter.core.profiles.extraction import (
+            build_profile_draft,
+            save_draft_profile,
+        )
+        from word_formatter.ui.methodology import MethodologyDraftDialog
+
+        source = Path(path)
+        self._set_status(f"Читаю методичку «{source.name}»…", "busy")
+        QApplication.setOverrideCursor(Qt.WaitCursor)
+        try:
+            draft = build_profile_draft(source)
+        except FormatterError as error:
+            self._set_status("Методичку прочитать не удалось.", "error")
+            QMessageBox.warning(self, "Не удалось прочитать методичку", error.user_message)
+            return None
+        finally:
+            QApplication.restoreOverrideCursor()
+
+        dialog = MethodologyDraftDialog(
+            draft,
+            source_name=source.stem,
+            suggested_name=f"Моя методичка: {source.stem}",
+            parent=self,
+        )
+        if dialog.exec() != QDialog.Accepted:
+            self._set_status("Создание профиля отменено.")
+            return None
+
+        name = dialog.profile_name()
+        directory = self._catalog.directories[1]
+        try:
+            saved = save_draft_profile(draft, name=name, directory=directory)
+        except FormatterError as error:
+            self._set_status("Профиль сохранить не удалось.", "error")
+            QMessageBox.warning(self, "Не удалось сохранить профиль", error.user_message)
+            return None
+
+        self.refresh_profiles()
+        if self.select_profile(saved.stem):
+            self._set_status(
+                f"Профиль «{name}» создан и выбран. Теперь выберите документ для оформления.",
+                "success",
+            )
+        else:
+            self._set_status(f"Профиль сохранён: {saved}", "success")
+        return saved.stem
 
     # --- выбор документа ------------------------------------------------------
 

@@ -1,0 +1,179 @@
+{
+  "id": "gost-7-32-2017",
+  "name": "ГОСТ 7.32-2017 — отчёт о научно-исследовательской работе",
+  "description": "Оформление отчёта о НИР по ГОСТ 7.32-2017 «Отчет о научно-исследовательской работе. Структура и правила оформления»: формат листа, поля, шрифт, интервалы, заголовки, подписи, таблицы и нумерация страниц. Подходит для отчётов по практике и НИР, которые оформляют по этому стандарту.",
+  "version": "1.0.0",
+  "demo": false,
+  "source": {
+    "title": "ГОСТ 7.32-2017 «Отчет о научно-исследовательской работе. Структура и правила оформления»",
+    "year": 2017,
+    "note": "Из текста стандарта: отчёт выполняют на листах формата А4 через полтора интервала; шрифт Times New Roman размером не менее 12 пт; поля: левое 30 мм, правое 15 мм, верхнее и нижнее 20 мм; абзацный отступ 1,25 см; полужирный шрифт — только для заголовков; сквозная нумерация арабскими цифрами. Размещение подписей (подпись рисунка под рисунком, наименование таблицы над таблицей) и другие частности — общепринятая практика оформления по этому стандарту."
+  },
+  "appliesTo": [
+    "отчёт о научно-исследовательской работе",
+    "отчёт по практике",
+    "отчёт по научной работе"
+  ],
+  "page": {
+    "format": "A4",
+    "orientation": "portrait",
+    "marginsMm": { "left": 30, "right": 15, "top": 20, "bottom": 20 },
+    "headerMm": 20,
+    "footerMm": 12.5
+  },
+  "body": {
+    "font": "Times New Roman",
+    "sizePt": 14,
+    "alignment": "justify",
+    "firstLineIndentCm": 1.25,
+    "lineSpacing": 1.5,
+    "spaceBeforePt": 0,
+    "spaceAfterPt": 0,
+    "bold": false,
+    "italic": false,
+    "color": null,
+    "removeItalic": false,
+    "removeUnderline": false
+  },
+  "headings": {
+    "maxLevel": 3,
+    "noHyphenation": true,
+    "structural": {
+      "titles": [
+        "РЕФЕРАТ",
+        "СОДЕРЖАНИЕ",
+        "ТЕРМИНЫ И ОПРЕДЕЛЕНИЯ",
+        "ПЕРЕЧЕНЬ СОКРАЩЕНИЙ И ОБОЗНАЧЕНИЙ",
+        "ВВЕДЕНИЕ",
+        "ЗАКЛЮЧЕНИЕ",
+        "СПИСОК ИСПОЛЬЗОВАННЫХ ИСТОЧНИКОВ",
+        "ПРИЛОЖЕНИЕ"
+      ],
+      "uppercase": true,
+      "font": "Times New Roman",
+      "sizePt": 14,
+      "bold": true,
+      "italic": false,
+      "color": null,
+      "alignment": "center",
+      "firstLineIndentCm": 0,
+      "lineSpacing": 1.0,
+      "spaceBeforePt": 0,
+      "spaceAfterPt": 0
+    },
+    "levels": {
+      "1": {
+        "font": "Times New Roman",
+        "sizePt": 14,
+        "bold": true,
+        "italic": false,
+        "color": null,
+        "alignment": "justify",
+        "firstLineIndentCm": 1.25,
+        "lineSpacing": 1.0,
+        "spaceBeforePt": 0,
+        "spaceAfterPt": 0
+      },
+      "2": {
+        "font": "Times New Roman",
+        "sizePt": 14,
+        "bold": true,
+        "italic": false,
+        "color": null,
+        "alignment": "justify",
+        "firstLineIndentCm": 1.25,
+        "lineSpacing": 1.0,
+        "spaceBeforePt": 0,
+        "spaceAfterPt": 0
+      },
+      "3": {
+        "font": "Times New Roman",
+        "sizePt": 14,
+        "bold": true,
+        "italic": false,
+        "color": null,
+        "alignment": "justify",
+        "firstLineIndentCm": 1.25,
+        "lineSpacing": 1.0,
+        "spaceBeforePt": 0,
+        "spaceAfterPt": 0
+      }
+    }
+  },
+  "captions": {
+    "figure": {
+      "font": "Times New Roman",
+      "sizePt": 14,
+      "alignment": "center",
+      "firstLineIndentCm": 0,
+      "lineSpacing": 1.0,
+      "spaceBeforePt": 0,
+      "spaceAfterPt": 0,
+      "noHyphenation": true,
+      "position": "below"
+    },
+    "table": {
+      "font": "Times New Roman",
+      "sizePt": 14,
+      "alignment": "left",
+      "firstLineIndentCm": 0,
+      "lineSpacing": 1.0,
+      "spaceBeforePt": 0,
+      "spaceAfterPt": 0,
+      "noHyphenation": true,
+      "position": "above"
+    }
+  },
+  "figures": {
+    "alignment": "center",
+    "lineSpacing": 1.0,
+    "spaceBeforePt": 0,
+    "spaceAfterPt": 0
+  },
+  "tables": {
+    "font": "Times New Roman",
+    "fontSizePt": 12,
+    "lineSpacing": 1.0,
+    "firstLineIndentCm": 0,
+    "headerRowAlign": "center",
+    "numericCellAlign": "center",
+    "textCellAlign": "left",
+    "markerCells": ["", "–", "-", "—", "х", "x", "Х", "X"],
+    "preferredWidth": "auto",
+    "indentCm": 0
+  },
+  "footnotes": {
+    "font": "Times New Roman",
+    "fontSizePt": 10,
+    "lineSpacing": 1.0
+  },
+  "lists": {
+    "applyParagraphFormatting": true,
+    "replaceMarkers": false,
+    "firstLineIndentCm": 1.25
+  },
+  "pageNumbers": {
+    "enabled": true,
+    "position": "bottom-center",
+    "font": "Times New Roman",
+    "fontSizePt": 12,
+    "skipFirstPage": true
+  },
+  "hyphenation": {
+    "enabled": false,
+    "excludeHeadings": true,
+    "excludeCaptions": true
+  },
+  "blankLines": {
+    "insert": false,
+    "style": "body"
+  },
+  "limitations": [
+    "Стандарт допускает размер шрифта не менее 12 пт; в профиле выбран 14 пт. Если кафедра требует 12 пт, измените значение sizePt в этом профиле.",
+    "Расстояние между заголовком и текстом стандарт задаёт в несколько интервалов; приложение свободные строки не вставляет (blankLines.insert выключено) — проверьте интервалы вручную.",
+    "Положение номера страницы стандарт не задаёт: выбрано внизу по центру. Если у вас принято иначе, измените pageNumbers.position.",
+    "Размер шрифта сносок и расстояния до колонтитулов стандарт не задаёт: взяты распространённые значения 10 пт, 20 мм и 12,5 мм.",
+    "Полужирный шрифт стандарт разрешает только для заголовков. Приложение не снимает полужирный в тексте: это оформление автора, проверьте вручную.",
+    "Автоматическая расстановка переносов стандартом не оговорена и в профиле выключена."
+  ]
+}
