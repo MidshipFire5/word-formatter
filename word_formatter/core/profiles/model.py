@@ -225,9 +225,12 @@ class TableSettings:
     numeric_cell_align: str
     text_cell_align: str
     marker_cells: tuple[str, ...]
+    preferred_width: str = "keep"
+    indent_cm: float | None = None
 
     @classmethod
     def from_dict(cls, raw: dict[str, Any]) -> "TableSettings":
+        indent = raw.get("indentCm")
         return cls(
             font=raw.get("font"),
             font_size_pt=float(raw["fontSizePt"]),
@@ -237,6 +240,34 @@ class TableSettings:
             numeric_cell_align=str(raw["numericCellAlign"]),
             text_cell_align=str(raw["textCellAlign"]),
             marker_cells=tuple(str(item) for item in raw.get("markerCells", ())),
+            preferred_width=str(raw.get("preferredWidth", "keep")),
+            indent_cm=None if indent is None else float(indent),
+        )
+
+
+@dataclass(frozen=True)
+class FigureSettings:
+    """Оформление абзаца с рисунком.
+
+    Рисунок — это абзац с картинкой. Одного выравнивания мало: если абзац
+    наследует абзацный отступ (например, из стиля «Обычный», куда правило
+    записывает отступ первой строки для основного текста), картинка
+    смещается вправо на величину отступа. Поэтому отступ у абзаца
+    с рисунком снимается, а выравнивание задаётся явно.
+    """
+
+    alignment: str = "center"
+    line_spacing: float = 1.0
+    space_before_pt: float = 0.0
+    space_after_pt: float = 0.0
+
+    @classmethod
+    def from_dict(cls, raw: dict[str, Any]) -> "FigureSettings":
+        return cls(
+            alignment=str(raw.get("alignment", "center")),
+            line_spacing=float(raw.get("lineSpacing", 1.0)),
+            space_before_pt=float(raw.get("spaceBeforePt", 0.0)),
+            space_after_pt=float(raw.get("spaceAfterPt", 0.0)),
         )
 
 
@@ -329,6 +360,7 @@ class Profile:
     body: BodySettings
     headings: HeadingsSettings
     captions: CaptionsSettings
+    figures: FigureSettings
     tables: TableSettings
     footnotes: FootnotesSettings
     lists: ListsSettings
@@ -353,6 +385,7 @@ class Profile:
             body=BodySettings.from_dict(raw["body"]),
             headings=HeadingsSettings.from_dict(raw["headings"]),
             captions=CaptionsSettings.from_dict(raw["captions"]),
+            figures=FigureSettings.from_dict(raw.get("figures", {})),
             tables=TableSettings.from_dict(raw["tables"]),
             footnotes=FootnotesSettings.from_dict(raw["footnotes"]),
             lists=ListsSettings.from_dict(raw["lists"]),

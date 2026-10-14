@@ -65,6 +65,24 @@ def set_first_line_indent(paragraph: Paragraph, indent_cm: float) -> None:
         del indent.attrib[hanging]
 
 
+def clear_paragraph_indent(paragraph: Paragraph) -> None:
+    """Убирает абзацный отступ целиком.
+
+    Нужно для абзаца с рисунком: если отступ наследуется (например, из стиля
+    «Обычный», которому правило задаёт отступ первой строки основного текста),
+    картинка смещается вправо даже при выравнивании по центру.
+    """
+    pPr = paragraph._p.get_or_add_pPr()
+    indent = ensure_ordered_child(pPr, "w:ind", PPR_ORDER)
+    for attribute in ("w:firstLine", "w:left", "w:right"):
+        indent.set(qn(attribute), "0")
+    # Конкурирующие настройки отступа: их нужно именно удалить, а не обнулить.
+    for attribute in ("w:hanging", "w:hangingChars", "w:firstLineChars", "w:start", "w:end"):
+        key = qn(attribute)
+        if key in indent.attrib:
+            del indent.attrib[key]
+
+
 def set_spacing(paragraph: Paragraph, *, before_pt: float, after_pt: float, line_spacing: float) -> None:
     """Задаёт интервалы абзаца, снимая автоматические интервалы Word."""
     paragraph_format = paragraph.paragraph_format

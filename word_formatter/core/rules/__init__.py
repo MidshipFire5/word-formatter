@@ -9,12 +9,14 @@ from word_formatter.core.rules.captions import apply_captions
 from word_formatter.core.rules.changes import Change, ChangeLog
 from word_formatter.core.rules.context import RuleContext
 from word_formatter.core.rules.footnotes import apply_note_styles
+from word_formatter.core.rules.figures import apply_figures
 from word_formatter.core.rules.headings import apply_heading_styles, apply_headings
 from word_formatter.core.rules.hyphenation import apply_hyphenation
 from word_formatter.core.rules.lists import apply_lists
 from word_formatter.core.rules.page import apply_page_settings
 from word_formatter.core.rules.page_numbers import apply_page_numbers
 from word_formatter.core.rules.runner import apply_all_rules
+from word_formatter.core.rules.table_geometry import set_table_geometry
 from word_formatter.core.rules.tables import apply_tables
 from word_formatter.core.rules.text import apply_body_text, apply_document_defaults
 
@@ -29,6 +31,7 @@ __all__ = [
     "apply_caption_positions",
     "apply_captions",
     "apply_document_defaults",
+    "apply_figures",
     "apply_heading_styles",
     "apply_headings",
     "apply_hyphenation",
@@ -38,4 +41,5 @@ __all__ = [
     "apply_page_settings",
     "apply_tables",
     "collect_body",
+    "set_table_geometry",
 ]

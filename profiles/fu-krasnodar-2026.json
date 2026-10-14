@@ -133,7 +133,15 @@
     "headerRowAlign": "center",
     "numericCellAlign": "center",
     "textCellAlign": "left",
-    "markerCells": ["", "–", "-", "—", "х", "x", "Х", "X"]
+    "markerCells": ["", "–", "-", "—", "х", "x", "Х", "X"],
+    "preferredWidth": "auto",
+    "indentCm": 0
+  },
+  "figures": {
+    "alignment": "center",
+    "lineSpacing": 1.0,
+    "spaceBeforePt": 0,
+    "spaceAfterPt": 0
   },
   "footnotes": {
     "font": "Times New Roman",

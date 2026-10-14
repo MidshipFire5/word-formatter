@@ -14,6 +14,7 @@ from word_formatter.core.rules.captions import apply_captions
 from word_formatter.core.rules.changes import ChangeLog
 from word_formatter.core.rules.context import RuleContext
 from word_formatter.core.rules.footnotes import apply_note_styles
+from word_formatter.core.rules.figures import apply_figures
 from word_formatter.core.rules.headings import apply_heading_styles, apply_headings
 from word_formatter.core.rules.hyphenation import apply_hyphenation
 from word_formatter.core.rules.lists import apply_lists
@@ -34,6 +35,7 @@ def apply_all_rules(context: RuleContext) -> ChangeLog:
     apply_lists(context)
     apply_headings(context)
     apply_captions(context)
+    apply_figures(context)
     apply_tables(context)
     apply_note_styles(context)
     apply_page_numbers(context)

@@ -31,7 +31,7 @@ COLOR_PATTERN = re.compile(r"^#[0-9A-Fa-f]{6}$")
 
 ROOT_KEYS = {
     "id", "name", "description", "version", "demo", "source", "appliesTo",
-    "page", "body", "headings", "captions", "tables", "footnotes", "lists",
+    "page", "body", "headings", "captions", "figures", "tables", "footnotes", "lists",
     "pageNumbers", "hyphenation", "blankLines", "limitations",
 }
 SOURCE_KEYS = {"title", "authors", "place", "year", "pages", "note"}
@@ -47,9 +47,12 @@ STRUCTURAL_KEYS = TEXT_STYLE_KEYS | {"uppercase", "titles"}
 CAPTIONS_KEYS = {"figure", "table"}
 CAPTION_KEYS = TEXT_STYLE_KEYS | {"noHyphenation", "position"}
 CAPTION_POSITIONS = ("keep", "above", "below")
+FIGURES_KEYS = {"alignment", "lineSpacing", "spaceBeforePt", "spaceAfterPt"}
+TABLE_WIDTH_MODES = ("auto", "keep")
 TABLES_KEYS = {
     "font", "fontSizePt", "lineSpacing", "firstLineIndentCm",
     "headerRowAlign", "numericCellAlign", "textCellAlign", "markerCells",
+    "preferredWidth", "indentCm",
 }
 FOOTNOTES_KEYS = {"font", "fontSizePt", "lineSpacing"}
 LISTS_KEYS = {"applyParagraphFormatting", "replaceMarkers", "firstLineIndentCm"}
@@ -348,6 +351,17 @@ def _validate_captions(checker: Checker, raw: dict[str, Any]) -> None:
             checker.text(caption, "position", f"captions.{key}", required=False, choices=CAPTION_POSITIONS)
 
 
+def _validate_figures(checker: Checker, raw: dict[str, Any]) -> None:
+    figures = checker.object(raw.get("figures"), "figures", required=False)
+    if figures is None:
+        return
+    checker.keys(figures, "figures", FIGURES_KEYS)
+    checker.text(figures, "alignment", "figures", required=False, choices=ALIGNMENTS)
+    checker.number(figures, "lineSpacing", "figures", required=False, minimum=0.5, maximum=3, unit_text="(множитель интервала)")
+    checker.number(figures, "spaceBeforePt", "figures", required=False, minimum=0, maximum=100, unit_text="в пунктах")
+    checker.number(figures, "spaceAfterPt", "figures", required=False, minimum=0, maximum=100, unit_text="в пунктах")
+
+
 def _validate_tables(checker: Checker, raw: dict[str, Any]) -> None:
     tables = checker.object(raw.get("tables"), "tables")
     if tables is None:
@@ -361,6 +375,16 @@ def _validate_tables(checker: Checker, raw: dict[str, Any]) -> None:
     checker.text(tables, "numericCellAlign", "tables", choices=ALIGNMENTS)
     checker.text(tables, "textCellAlign", "tables", choices=ALIGNMENTS)
     checker.string_list(tables, "markerCells", "tables", required=False, allow_empty_items=True)
+    checker.text(tables, "preferredWidth", "tables", required=False, choices=TABLE_WIDTH_MODES)
+    checker.number(
+        tables,
+        "indentCm",
+        "tables",
+        required=False,
+        minimum=0,
+        maximum=10,
+        unit_text="в сантиметрах",
+    )
 
 
 def _validate_footnotes(checker: Checker, raw: dict[str, Any]) -> None:
@@ -436,6 +460,7 @@ def validate_profile(raw: Any) -> list[Issue]:
     _validate_body(checker, profile)
     _validate_headings(checker, profile)
     _validate_captions(checker, profile)
+    _validate_figures(checker, profile)
     _validate_tables(checker, profile)
     _validate_footnotes(checker, profile)
     _validate_lists(checker, profile)

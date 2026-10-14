@@ -12,6 +12,7 @@ import re
 
 from word_formatter.core.profiles import TableSettings
 from word_formatter.core.rules.context import RuleContext
+from word_formatter.core.rules.table_geometry import set_table_geometry
 from word_formatter.core.rules.text import alignment_title
 from word_formatter.core.rules.typography import (
     ALIGNMENT,
@@ -110,10 +111,20 @@ def apply_tables(context: RuleContext) -> None:
     marker_cells = 0
     mixed = 0
     merged = 0
+    width_removed = 0
+    indent_cleared = 0
 
     for index, table_info in enumerate(context.inventory.tables):
         table = context.table(index)
         merged += table_info.merged_cells
+
+        # Положение и ширина таблицы: снятая «Ширина» и убранный отступ —
+        # это то, из-за чего таблица уезжает вправо.
+        for action in set_table_geometry(table, settings):
+            if action.startswith("ширина"):
+                width_removed += 1
+            else:
+                indent_cleared += 1
         # Объединённые по горизонтали ячейки возвращаются в row.cells несколько раз.
         # Сравнивать их по id() нельзя: lxml создаёт объекты-обёртки на лету,
         # поэтому ссылки на уже обработанные ячейки сохраняются и сравниваются
@@ -161,6 +172,19 @@ def apply_tables(context: RuleContext) -> None:
         f"шапка: {header}; числовых: {numeric}; текстовых: {textual}; "
         f"ячеек-прочерков без изменений: {marker_cells}",
     )
+
+    if width_removed or indent_cleared:
+        parts = []
+        if width_removed:
+            parts.append(f"снята заданная ширина у {width_removed}")
+        if indent_cleared:
+            parts.append(f"убран отступ от левого поля у {indent_cleared}")
+        context.changes.add(
+            CATEGORY_TABLES,
+            "положение таблиц: " + ", ".join(parts) + " — таблица стоит по левому полю",
+            detail="в Word это галочка «Ширина» и поле «Отступ слева» в свойствах таблицы; "
+            "без этого таблица смещается вправо",
+        )
 
     if mixed:
         context.changes.add(

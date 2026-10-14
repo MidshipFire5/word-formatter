@@ -206,6 +206,42 @@ def test_report_mentions_caption_move(processed) -> None:
     assert "Положение подписей" in text
 
 
+def test_figure_is_centered_without_indent(processed) -> None:
+    """Рисунок по центру и без абзацного отступа: иначе он уезжает вправо."""
+    _source, _digest, result = processed
+    document = Document(str(result.output_path))
+
+    figure = next(
+        paragraph
+        for paragraph in document.paragraphs
+        if next(iter(paragraph._p.iter(qn("w:drawing"))), None) is not None
+    )
+    pPr = figure._p.find(qn("w:pPr"))
+    assert pPr is not None, "у абзаца с рисунком должны быть свои свойства"
+    assert pPr.find(qn("w:jc")).get(qn("w:val")) == "center"
+
+    indent = pPr.find(qn("w:ind"))
+    assert indent is not None
+    assert indent.get(qn("w:firstLine")) == "0"
+    assert indent.get(qn("w:left")) == "0"
+
+
+def test_table_has_no_fixed_width(processed) -> None:
+    """«Ширина» снята, отступ убран: из-за них таблица смещается вправо."""
+    _source, _digest, result = processed
+    document = Document(str(result.output_path))
+
+    assert document.tables, "в примере должна быть таблица"
+    for table in document.tables:
+        widths = table._tbl.tblPr.findall(qn("w:tblW"))
+        assert len(widths) == 1, "элемент ширины должен быть один"
+        assert widths[0].get(qn("w:type")) == "auto"
+
+        indent = table._tbl.tblPr.find(qn("w:tblInd"))
+        assert indent is not None
+        assert indent.get(qn("w:w")) == "0"
+
+
 def test_report_lists_manual_checks(processed) -> None:
     _source, _digest, result = processed
     manual = "\n".join(result.report.manual_checks)

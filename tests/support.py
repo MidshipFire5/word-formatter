@@ -125,6 +125,8 @@ FORMATTING_ELEMENTS = frozenset(
         "sectPr", "pgSz", "pgMar", "cols", "docGrid", "headerReference",
         "footerReference", "titlePg", "pgNumType", "lnNumType", "textDirection",
         "rtlGutter", "type", "header", "footer", "gutter", "footnotePr", "endnotePr",
+        # таблица: её положение и ширина, но не содержимое ячеек
+        "tblPr", "tblW", "tblInd", "tblLayout",
     }
 )
 

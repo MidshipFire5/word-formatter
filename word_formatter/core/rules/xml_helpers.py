@@ -66,6 +66,15 @@ SETTINGS_ORDER = (
 
 XML_SPACE = "{http://www.w3.org/XML/1998/namespace}space"
 
+# Порядок элементов в w:tblPr: свойства таблицы тоже подчиняются схеме.
+TBLPR_ORDER = (
+    "w:tblStyle", "w:tblpPr", "w:tblOverlap", "w:bidiVisual",
+    "w:tblStyleRowBandSize", "w:tblStyleColBandSize", "w:tblW", "w:jc",
+    "w:tblCellSpacing", "w:tblInd", "w:tblBorders", "w:shd", "w:tblLayout",
+    "w:tblCellMar", "w:tblLook", "w:tblCaption", "w:tblDescription",
+    "w:tblPrChange",
+)
+
 
 def _position(order: tuple[str, ...], tag: str) -> int:
     try:
@@ -106,6 +115,22 @@ def ensure_ordered_child(parent, tag: str, order: tuple[str, ...]):
     if not inserted:
         parent.append(child)
     return child
+
+
+def ensure_single_ordered_child(parent, tag: str, order: tuple[str, ...]):
+    """Оставляет один элемент с таким именем на месте, предписанном схемой.
+
+    Word иногда сохраняет два одинаковых элемента — например, `w:tblW`:
+    один от стиля таблицы, другой от автора. Тогда значение ширины читается
+    неоднозначно. Лишние элементы удаляются, остаётся первый.
+    """
+    children = parent.findall(qn(tag))
+    if children:
+        keep = children[0]
+        for extra in children[1:]:
+            parent.remove(extra)
+        return keep
+    return ensure_ordered_child(parent, tag, order)
 
 
 def set_rfonts(rpr, font_name: str) -> None:
