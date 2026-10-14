@@ -10,6 +10,7 @@ from PySide6.QtWidgets import QDialog
 
 from word_formatter.core.profiles import ProfileCatalog, load_profile_from_path
 from word_formatter.core.profiles.extraction import build_profile_draft
+from word_formatter.core.profiles.extraction.draft import value_hint
 from word_formatter.ui import main_window as window_module
 from word_formatter.ui.main_window import MainWindow
 from word_formatter.ui.methodology import (
@@ -146,7 +147,7 @@ def test_dialog_values_can_be_edited(qtbot, methodology: Path) -> None:
         position for position, row in enumerate(dialog._rows) if row.path == "body.sizePt"
     )
     # В методичке указано 12 пт — исправляем на другое значение.
-    dialog._table.item(index, 1).setText("13")
+    dialog._fields[index].setText("13")
 
     assert dialog.edited_values() == {"body.sizePt": 13.0}
 
@@ -167,13 +168,87 @@ def test_dialog_shows_empty_rows_for_missing_requirements(qtbot, methodology: Pa
     assert empty_rows, "в методичке требований меньше, чем умеет профиль"
 
     position, row = empty_rows[0]
-    cell = dialog._table.item(position, 1)
-    assert cell.text() == ""
-    assert cell.toolTip()
+    field = dialog._fields[position]
+    assert field.text() == ""
+    assert field.placeholderText(), "в пустой ячейке должна быть серая подсказка"
     assert "не найдено" in dialog._table.item(position, 2).text()
 
-    cell.setText("1,5")
+    field.setText("1,5")
     assert dialog.edited_values().get(row.path) == 1.5
+
+
+def test_every_value_cell_has_a_hint(qtbot, methodology: Path) -> None:
+    """В каждой ячейке значения видно, что можно вписать."""
+    draft = build_profile_draft(methodology)
+    dialog = MethodologyDraftDialog(
+        draft, source_name="методичка", suggested_name="Моя методичка"
+    )
+    qtbot.addWidget(dialog)
+
+    for row, field in zip(dialog._rows, dialog._fields):
+        assert field.placeholderText(), f"нет подсказки для {row.path}"
+
+
+@pytest.mark.parametrize(
+    ("path", "expected"),
+    [
+        ("pageNumbers.enabled", "да или нет"),
+        ("headings.structural.uppercase", "да или нет"),
+        ("body.sizePt", "число в пунктах"),
+        ("body.firstLineIndentCm", "число в сантиметрах"),
+        ("page.marginsMm.left", "число в миллиметрах"),
+        ("headings.maxLevel", "целое число"),
+        ("body.alignment", "по ширине"),
+        ("captions.figure.position", "над элементом"),
+        ("pageNumbers.position", "внизу по центру"),
+        ("body.font", "название шрифта"),
+        ("body.lineSpacing", "1,5 — полуторный"),
+    ],
+)
+def test_hint_explains_what_to_type(path: str, expected: str) -> None:
+    assert expected in value_hint(path)
+
+
+def test_unclear_value_is_explained_and_blocks_saving(qtbot, methodology: Path) -> None:
+    """Непонятное значение не теряется молча — окно объясняет, что вписать."""
+    draft = build_profile_draft(methodology)
+    dialog = MethodologyDraftDialog(
+        draft, source_name="методичка", suggested_name="Моя методичка"
+    )
+    qtbot.addWidget(dialog)
+
+    index = next(
+        position for position, row in enumerate(dialog._rows) if row.path == "body.sizePt"
+    )
+    dialog._fields[index].setText("четырнадцать")
+
+    assert dialog.unclear_rows()[0][0].path == "body.sizePt"
+
+    dialog._on_save()
+
+    assert dialog.result() != QDialog.Accepted
+    assert "четырнадцать" in dialog.message_label.text()
+    assert "число в пунктах" in dialog.message_label.text()
+    assert dialog.edited_values() == {}
+
+
+def test_clear_value_passes_and_is_reported(qtbot, methodology: Path) -> None:
+    draft = build_profile_draft(methodology)
+    dialog = MethodologyDraftDialog(
+        draft, source_name="методичка", suggested_name="Моя методичка"
+    )
+    qtbot.addWidget(dialog)
+
+    index = next(
+        position for position, row in enumerate(dialog._rows) if row.path == "body.sizePt"
+    )
+    dialog._fields[index].setText("13")
+
+    assert dialog.unclear_rows() == []
+    dialog._on_save()
+
+    assert dialog.result() == QDialog.Accepted
+    assert "Исправлено вами: 1" in dialog.message_label.text()
 
 
 def test_dialog_ignores_unchanged_rows(qtbot, methodology: Path) -> None:
@@ -211,7 +286,7 @@ def test_edited_value_lands_in_the_saved_profile(
             position = next(
                 place for place, row in enumerate(self._rows) if row.path == "body.sizePt"
             )
-            self._table.item(position, 1).setText("13")
+            self._fields[position].setText("13")
 
         def exec(self) -> int:
             return QDialog.Accepted

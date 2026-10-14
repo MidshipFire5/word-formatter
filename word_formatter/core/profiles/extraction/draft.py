@@ -453,6 +453,52 @@ def _base_value_object(path: str) -> Any:
     return node
 
 
+# Подсказки для пустых полей: серым текстом в самой ячейке. Человек должен
+# видеть, что именно здесь можно вписать, иначе он напишет «полтора», а код
+# ждёт число.
+HINT_YES_NO = "да или нет"
+HINT_SPACING = "число: 1 — одинарный, 1,5 — полуторный, 2 — двойной"
+HINT_ALIGNMENT = "по ширине, по центру, по левому краю или по правому краю"
+HINT_POSITION = "над элементом или под элементом"
+HINT_PAGE_NUMBER_POSITION = (
+    "внизу по центру, внизу слева, внизу справа, "
+    "вверху по центру, вверху слева или вверху справа"
+)
+HINT_FONT = "название шрифта, например Times New Roman"
+HINT_TEXT = "текст"
+
+
+def value_hint(path: str) -> str:
+    """Что можно вписать в это поле — серая подсказка в пустой ячейке."""
+    base = _base_value_object(path)
+
+    if isinstance(base, bool):
+        return HINT_YES_NO
+    if path.endswith("lineSpacing"):
+        return HINT_SPACING
+    if path.endswith("alignment"):
+        return HINT_ALIGNMENT
+    if path == "pageNumbers.position":
+        return HINT_PAGE_NUMBER_POSITION
+    if path.endswith("position"):
+        return HINT_POSITION
+    if path.endswith("font"):
+        return HINT_FONT
+    if isinstance(base, (int, float)):
+        # Единица измерения видна в самом имени поля: sizePt, marginsMm,
+        # firstLineIndentCm, spaceBeforePt.
+        if "Pt" in path:
+            return "число в пунктах, например 14"
+        if "Cm" in path:
+            return "число в сантиметрах, например 1,25"
+        if "Mm" in path:
+            return "число в миллиметрах, например 20"
+        return "целое число, например 3"
+    if isinstance(base, str):
+        return HINT_TEXT
+    return HINT_TEXT
+
+
 def _set(profile: dict[str, Any], path: str, value: Any) -> None:
     """Записывает значение по пути вида «body.sizePt»."""
     parts = path.split(".")

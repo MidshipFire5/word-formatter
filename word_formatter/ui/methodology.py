@@ -43,6 +43,7 @@ from word_formatter.core.profiles.extraction.draft import (
     CODE_TITLES,
     VALUE_CODES,
     coerce_value,
+    value_hint,
 )
 
 DROP_SUFFIXES = tuple(TEXT_SUFFIXES)
@@ -161,6 +162,12 @@ class MethodologyDraftDialog(QDialog):
 
         layout.addWidget(self._build_tabs(), 1)
 
+        # Сообщение о непонятном значении или об успехе — прямо над кнопками.
+        self.message_label = QLabel()
+        self.message_label.setObjectName("statusLabel")
+        self.message_label.setWordWrap(True)
+        layout.addWidget(self.message_label)
+
         buttons = QDialogButtonBox()
         self.save_button = buttons.addButton("Сохранить профиль", QDialogButtonBox.AcceptRole)
         self.save_button.setObjectName("primaryButton")
@@ -179,8 +186,8 @@ class MethodologyDraftDialog(QDialog):
         значение из основы профиля.
         """
         edits: dict = {}
-        for row, item in zip(self._rows, self._table_items):
-            text = item.text()
+        for row, field in zip(self._rows, self._fields):
+            text = field.text()
             original = human_value(row.value)
             if text.strip() == original.strip():
                 continue
@@ -188,6 +195,17 @@ class MethodologyDraftDialog(QDialog):
             if value is not None:
                 edits[row.path] = value
         return edits
+
+    def unclear_rows(self) -> list[tuple[DraftRow, str]]:
+        """Строки, где вписанное значение не удалось понять."""
+        problems: list[tuple[DraftRow, str]] = []
+        for row, field in zip(self._rows, self._fields):
+            text = field.text().strip()
+            if not text or text == human_value(row.value).strip():
+                continue
+            if coerce_value(row.path, text) is None:
+                problems.append((row, text))
+        return problems
 
     # --- содержимое окна ------------------------------------------------------
 
@@ -220,19 +238,22 @@ class MethodologyDraftDialog(QDialog):
         table.setSelectionBehavior(QTableWidget.SelectRows)
         table.setAlternatingRowColors(True)
 
-        self._table_items: list[QTableWidgetItem] = []
+        self._fields: list[QLineEdit] = []
         for index, row in enumerate(self._rows):
             name_item = QTableWidgetItem(row.title or row.path)
             name_item.setFlags(name_item.flags() & ~Qt.ItemIsEditable)
             table.setItem(index, 0, name_item)
 
-            value_item = QTableWidgetItem(human_value(row.value))
-            value_item.setFlags(value_item.flags() | Qt.ItemIsEditable)
-            if not row.found:
-                value_item.setToolTip(row.placeholder)
-                value_item.setForeground(Qt.gray)
-            table.setItem(index, 1, value_item)
-            self._table_items.append(value_item)
+            # Значение — поле ввода: в пустой ячейке серым видно подсказку,
+            # что сюда можно вписать, и она исчезает при вводе.
+            hint = value_hint(row.path)
+            field = QLineEdit(human_value(row.value))
+            field.setPlaceholderText(hint)
+            field.setToolTip(
+                hint if row.found else f"В методичке не найдено. {hint}"
+            )
+            table.setCellWidget(index, 1, field)
+            self._fields.append(field)
 
             source_item = QTableWidgetItem(self._source_text(row))
             source_item.setFlags(source_item.flags() & ~Qt.ItemIsEditable)
@@ -241,7 +262,7 @@ class MethodologyDraftDialog(QDialog):
         header = table.horizontalHeader()
         header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
         header.setSectionResizeMode(1, QHeaderView.Interactive)
-        header.resizeSection(1, 150)
+        header.resizeSection(1, 220)
         header.setSectionResizeMode(2, QHeaderView.Stretch)
         self._table = table
         return table
@@ -284,5 +305,32 @@ class MethodologyDraftDialog(QDialog):
         if not self.profile_name():
             self.name_edit.setFocus()
             self.name_edit.setPlaceholderText("Введите название профиля")
+            self._say("Впишите название профиля — под этим именем он появится в списке.", "error")
             return
+
+        # Непонятное значение лучше объяснить сразу, чем молча его потерять.
+        problems = self.unclear_rows()
+        if problems:
+            row, text = problems[0]
+            position = self._rows.index(row)
+            field = self._fields[position]
+            field.setFocus()
+            field.selectAll()
+            self._table.scrollToItem(self._table.item(position, 0))
+            self._say(
+                f"Не удалось понять значение для «{row.title}»: «{text}». "
+                f"Здесь ожидается {value_hint(row.path)}.",
+                "error",
+            )
+            return
+
+        edits = self.edited_values()
+        if edits:
+            self._say(f"Исправлено вами: {len(edits)}. Профиль будет сохранён с ними.", "success")
         self.accept()
+
+    def _say(self, message: str, state: str = "info") -> None:
+        from word_formatter.ui import theme
+
+        self.message_label.setText(message)
+        theme.set_state(self.message_label, state)
