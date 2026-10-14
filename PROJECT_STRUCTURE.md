@@ -21,7 +21,8 @@ word-formatter/
 ├── docs/
 │   ├── SPEC.md                   согласованная спецификация MVP
 │   ├── ARCHITECTURE.md           устройство приложения и принятые решения
-│   └── PROFILES.md               формат профиля оформления
+│   ├── PROFILES.md               формат профиля оформления
+│   └── images/                   снимки окон для README
 │
 ├── examples/                     пример документа для проверки
 │   ├── пример-курсовой.docx      «наивно оформленная» курсовая
@@ -56,6 +57,7 @@ word-formatter/
 ├── tools/
 │   ├── bootstrap.py              подготовка окружения и запуск
 │   ├── make_example.py           сборка примера документа
+│   ├── build_exe.py              сборка переносимой версии (PyInstaller)
 │   └── messages/                 русские тексты для скриптов запуска
 │       ├── no_python.txt         Python не найден
 │       ├── incomplete_copy.txt   архив распакован не полностью
@@ -95,6 +97,7 @@ word-formatter/
 | `run_linux.sh` | То же для Linux. UTF-8, переносы строк LF |
 | `requirements.txt` | Рабочие зависимости с точными версиями |
 | `requirements-dev.txt` | Дополнительно `pytest` и `pytest-qt` |
+| `requirements-build.txt` | Дополнительно `pyinstaller` — только для сборки переносимой версии |
 | `pytest.ini` | Каталог тестов по умолчанию |
 | `README.md` | Что делает приложение, как запустить, что делать при ошибках |
 | `PROJECT_STRUCTURE.md` | Этот файл: назначение папок и правила размещения |

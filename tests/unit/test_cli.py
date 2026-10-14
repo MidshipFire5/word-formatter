@@ -1,4 +1,4 @@
-"""Проверочные команды запуска: --version и --list-profiles."""
+"""Проверочные команды запуска: --version, --list-profiles и --self-check."""
 
 from __future__ import annotations
 
@@ -22,6 +22,24 @@ def test_version_command(capsys: pytest.CaptureFixture[str]) -> None:
     out = capsys.readouterr().out
     assert "Word Formatter" in out
     assert APP_VERSION in out
+
+
+def test_self_check_processes_a_document(capsys: pytest.CaptureFixture[str]) -> None:
+    """Самопроверка оформляет документ и подтверждает сохранность содержимого."""
+    assert main(["--self-check"]) == EXIT_OK
+    out = capsys.readouterr().out
+    assert "Профиль:" in out
+    assert "Проверка пройдена" in out
+
+
+def test_self_check_reports_no_profiles(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Если профилей нет, самопроверка честно сообщает об этом."""
+    monkeypatch.setenv("WORD_FORMATTER_PROFILES_DIR", str(tmp_path / "пусто"))
+
+    assert main(["--self-check"]) == EXIT_ERROR
+    assert "не найдены" in capsys.readouterr().out
 
 
 def test_list_profiles_shows_shipped_profile(capsys: pytest.CaptureFixture[str]) -> None:

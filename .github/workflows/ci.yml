@@ -108,3 +108,41 @@ jobs:
             echo "::error::Повторный запуск занял слишком много времени: похоже, зависимости установились заново"
             exit 1
           fi
+
+  package:
+    name: Сборка переносимой версии (Windows)
+    runs-on: windows-latest
+    env:
+      PYTHONUTF8: "1"
+    steps:
+      - name: Получение кода
+        uses: actions/checkout@v7
+
+      - name: Установка Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Установка зависимостей
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt -r requirements-build.txt
+
+      - name: Сборка
+        run: python tools/build_exe.py
+
+      - name: Проверка собранного приложения
+        shell: pwsh
+        run: |
+          # Собранное приложение обязано не только запускаться, но и оформлять
+          # документ: это проверяет --self-check.
+          dist/WordFormatter/WordFormatter.exe --version
+          dist/WordFormatter/WordFormatter.exe --list-profiles
+          dist/WordFormatter/WordFormatter.exe --self-check
+
+      - name: Выгрузка сборки
+        uses: actions/upload-artifact@v7
+        with:
+          name: WordFormatter-windows
+          path: dist/WordFormatter
+          retention-days: 30

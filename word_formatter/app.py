@@ -32,6 +32,12 @@ def build_parser() -> argparse.ArgumentParser:
         default=None,
         help="проверить профили в указанной папке вместо встроенной",
     )
+    parser.add_argument(
+        "--self-check",
+        action="store_true",
+        help="проверить, что приложение обрабатывает документ: создать документ, "
+        "оформить его встроенным профилем и показать итог",
+    )
     return parser
 
 
@@ -70,6 +76,60 @@ GUI_MISSING_MESSAGE = (
 )
 
 
+def _run_self_check() -> int:
+    """Проверяет, что приложение умеет обрабатывать документ.
+
+    Документ создаётся тут же, во временной папке, и оформляется первым
+    встроенным профилем: так проверяются библиотеки, встроенные профили и
+    весь проход обработки — без графического интерфейса и без файлов
+    пользователя. Полезно после сборки переносимой версии.
+    """
+    import tempfile
+    from pathlib import Path
+
+    from docx import Document
+
+    from word_formatter.core.processing import process_document
+
+    catalog = ProfileCatalog()
+    infos = [info for info in catalog.list_infos() if info.is_usable]
+    if not infos:
+        print("Проверка не пройдена: встроенные профили не найдены.")
+        return EXIT_ERROR
+
+    selected = infos[0]
+    profile = catalog.load(selected.id)
+
+    with tempfile.TemporaryDirectory(prefix="word-formatter-check-") as directory:
+        folder = Path(directory)
+        source = folder / "проверка.docx"
+        target = folder / "проверка-оформлено.docx"
+
+        document = Document()
+        document.add_paragraph("ВВЕДЕНИЕ")
+        document.add_paragraph(
+            "Проверочный абзац: приложение должно оформить его по профилю, "
+            "не меняя текст."
+        )
+        document.save(source)
+
+        result = process_document(source, target, profile)
+
+    print(f"{APP_NAME} {APP_VERSION}")
+    print(f"Профиль: {profile.name}")
+    print(f"Абзацев в проверочном документе: {len(result.inventory.paragraphs)}")
+    print(f"Изменений в отчёте: {len(result.changes.items)}")
+
+    if not result.verification.passed:
+        print("Проверка не пройдена: содержимое документа изменилось.")
+        for problem in result.verification.problems:
+            print("  • " + problem)
+        return EXIT_ERROR
+
+    print("Проверка пройдена: документ обработан, содержимое сохранено.")
+    return EXIT_OK
+
+
 def _run_gui() -> int:
     try:
         from word_formatter.ui.application import run_application
@@ -92,6 +152,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             return EXIT_OK
         if args.list_profiles:
             return _print_profiles(args.profiles_dir)
+        if args.self_check:
+            return _run_self_check()
         return _run_gui()
     except FormatterError as error:
         print("Ошибка: " + error.user_message, file=sys.stderr)
