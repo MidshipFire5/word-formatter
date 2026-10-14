@@ -23,7 +23,7 @@ jobs:
       QT_QPA_PLATFORM: offscreen
     steps:
       - name: Получение кода
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Установка Python
         uses: actions/setup-python@v5
@@ -60,7 +60,7 @@ jobs:
       QT_QPA_PLATFORM: offscreen
     steps:
       - name: Получение кода
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Установка Python
         uses: actions/setup-python@v5
